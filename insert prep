@@ -1,0 +1,61 @@
+Databases
+
+Q1 perf 
+Q2 perf
+Q3 perf
+Q4 perf
+H1 perf
+H2 perf
+Box score 
+Advanced box score 
+
+
+
+Quarter_BoxScore table
+
+qbox_id, Game_ID, Team ID, Quarter, Home/Away, Starters, MP,FG,FGA,FG%,3P,3PA,3P%,FT,FTA,FT%,ORB,DRB,TRB,AST,STL,BLK,TOV,PF,PTS,+/-
+
+
+Half_BoxScore table
+
+hbox_id, Game_ID, Team_ID, Half, Home/Away, Starters,MP,FG,FGA,FG%,3P,3PA,3P%,FT,FTA,FT%,ORB,DRB,TRB,AST,STL,BLK,TOV,PF,PTS,+/-
+
+Game_BoxScore table 
+
+Game_ID, Team_ID, Home/Away, Starters,MP,FG,FGA,FG%,3P,3PA,3P%,FT,FTA,FT%,ORB,DRB,TRB,AST,STL,BLK,TOV,PF,PTS,+/-
+
+Advanced_BoxScore table
+
+Game_ID, Team_ID, Home/Away, Starters,MP,TS%,eFG%,3PAr,FTr,ORB%,DRB%,TRB%,AST%,STL%,BLK%,TOV%,USG%,ORtg,DRtg,BPM
+
+
+
+
+CREATE TABLE Quarter_BoxScore (
+    qbox_id     VARCHAR PRIMARY KEY,
+    game_id     INTEGER REFERENCES games (game_ID),
+    team_id     INTEGER REFERENCES teams (team_id),
+    quarter     INTEGER,
+    [Home/Away] VARCHAR,
+    starters    VARCHAR,
+    MP          VARCHAR,
+    FG          INTEGER,
+    FGA         INTEGER,
+    [FG%]       VARCHAR,
+    [3P]        INTEGER,
+    [3PA]       INTEGER,
+    [3P%]       VARCHAR,
+    FT          INTEGER,
+    FTA         INTEGER,
+    [FT%]       VARCHAR,
+    ORB         INTEGER,
+    DRB         INTEGER,
+    TRB         INTEGER,
+    AST         INTEGER,
+    STL         INTEGER,
+    BLK         INTEGER,
+    TOV         INTEGER,
+    PF          INTEGER,
+    PTS         INTEGER,
+    [+/-]       VARCHAR
+);
