@@ -1,0 +1,1 @@
+select WL, Game_date, Matchup, PF from games where team_id = 1610612743 AND Game_date > 'OCT 20, 2019'

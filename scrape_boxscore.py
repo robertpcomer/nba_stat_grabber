@@ -5,6 +5,7 @@ import csv, sqlite3,unicodedata, os.path
 import calendar
 import pandas as pd
 import unidecode
+import mysql.connector
 away_team = "Washington Wizards"
 ##home_team = "San Antonio Spurs"
 
@@ -31,19 +32,25 @@ def strip_accents(text):
 def clean_insert_boxscore(soup,testhomeid,testawayid,testgameid):
 ##print(soup)
     print(soup)
+  
     stats = urllib.request.urlopen(soup)
     this_soup = BeautifulSoup(stats, "html")
     count = 0
     team = "N/A"
     lazy_add =0
     for table in this_soup.find_all('table', {'class': 'sortable stats_table'}):
-        conn = sqlite3.connect("NbaStats.db")
-        curs = conn.cursor()
+    
+        mydb = mysql.connector.connect(
+        host="localhost",
+        user="robert",
+        password=""password_here""
+        )
+        msqlcursor = mydb.cursor()
        
         with open('boxscore.csv', 'w', newline='') as myfile:
             wr = csv.writer(myfile, quoting=csv.QUOTE_ALL)
 
-        
+            print(team)
             #print(type(table))
             #print("Yes")  
             id = table.contents[0]
@@ -58,7 +65,8 @@ def clean_insert_boxscore(soup,testhomeid,testawayid,testgameid):
             advanced_check =table['id']
             print(id.text)
             print(advanced_check)
-
+            print(testhomeid)
+            print(testawayid)
             #quarter_half_insert = []
             quarter = 0
             half = 0
@@ -85,8 +93,9 @@ def clean_insert_boxscore(soup,testhomeid,testawayid,testgameid):
                     game = testgameid
                     quarter_half_insert = ''
                     home_away = 'home'
-
-
+            print("values are here")
+            print(testawayid)
+            print(id.text)
             if ((id.text).find("Q1") != -1):
                 print("This is the first quarter")
                 if(count==1):
@@ -99,6 +108,7 @@ def clean_insert_boxscore(soup,testhomeid,testawayid,testgameid):
                     game = testgameid
                     quarter_half_insert = 'quarter,'
                     home_away = 'away'
+                    print("we made it into the loop")
          
                 if(count==9):
                     print("This is the home team Q1")
@@ -240,7 +250,7 @@ def clean_insert_boxscore(soup,testhomeid,testawayid,testgameid):
                 count= count - 1
             if ((id.text).find("OT2") != -1):
                 print("This is second overtime")
-                count= count -1
+                
                 if(count==7):
                     #print("this should be the away overtime")
                     box_type= 'Overtime'
@@ -250,6 +260,7 @@ def clean_insert_boxscore(soup,testhomeid,testawayid,testgameid):
                     quarter_half_insert = 'overtime, '
                     home_away = 'away'
                     overtime = '2'
+                    print(overtime)
                 if(count==15):
                     #print("this should be the home overtime")
                     box_type= 'Overtime'
@@ -259,11 +270,15 @@ def clean_insert_boxscore(soup,testhomeid,testawayid,testgameid):
                     quarter_half_insert = 'overtime, '
                     home_away = 'home'
                     overtime = '2'
+                count= count -1
+         
             if ((id.text).find("OT3") != -1):
                 #print("This is third overtime")
-                count= count -1
+               
+                
                 if(count==7):
                     #print("this should be the away overtime")
+                    #count= count -1
                     box_type= 'Overtime'
                     box_typeid = 'obox_id'             
                     team = testawayid
@@ -280,6 +295,32 @@ def clean_insert_boxscore(soup,testhomeid,testawayid,testgameid):
                     quarter_half_insert = 'overtime, '
                     home_away = 'home'
                     overtime = '3'
+                print(overtime)
+                count= count -1
+            print(id.text)
+            if ((id.text).find("OT4")!= -1):
+                #print("This is third overtime")
+                
+                print(count)
+                if(count==7):
+                    #print("this should be the away overtime")
+                    box_type= 'Overtime'
+                    box_typeid = 'obox_id'             
+                    team = testawayid
+                    game = testgameid
+                    quarter_half_insert = 'overtime, '
+                    home_away = 'away'
+                    overtime = '4'
+                if(count==15):
+                    #print("this should be the home overtime")
+                    box_type= 'Overtime'
+                    box_typeid = 'obox_id'             
+                    team = testhomeid
+                    game = testgameid
+                    quarter_half_insert = 'overtime, '
+                    home_away = 'home'
+                    overtime = '4'
+                count= count -1
 
 
             if ((id.text).find("-") != -1):
@@ -308,7 +349,7 @@ def clean_insert_boxscore(soup,testhomeid,testawayid,testgameid):
           
             columnheaders = tr[1].text
 
-            columnheaders = columnheaders.replace("\n","],[")
+            columnheaders = columnheaders.replace("\n","`,`")
             columnheaders = columnheaders[2:]
             columnheaders = columnheaders[:-2]
 
@@ -352,7 +393,7 @@ def clean_insert_boxscore(soup,testhomeid,testawayid,testgameid):
             
 
             #print(type(quarter_half_insert))
-            insert_statement = "Insert INTO " +box_type +"_BoxScore(" +box_typeid +",game_id, team_id," + quarter_half_insert + "[Home/Away]," +columnheaders + ") VALUES ("
+            insert_statement = "Insert INTO nba_stats." +box_type +"_BoxScore(" +box_typeid +",game_id, team_id," + quarter_half_insert + "`Home/Away`," +columnheaders + ") VALUES ("
             #print(insert_statement)
             
 
@@ -360,14 +401,16 @@ def clean_insert_boxscore(soup,testhomeid,testawayid,testgameid):
             #print(testawayid)
             #print(testgameid)
             
-
+            print(overtime)
             #print(team + "," + id.text + "," + bs_type  + "," + columnheaders )
             #print(id.text)
             
             for row in tr:
                 game_for_id = game *2
                 team_for_id = team * 3
-                
+                #print(lazy_add)
+                #print(game_for_id)
+                #print(team_for_id)
                 insert_df = pd.Series()    
                 lazyid =  str(lazy_add) +str(game_for_id) +str(team_for_id) +str(rowstart) + str(len(columnheaders)) + str(count) +str(team) 
                 if(rowstart >= 2): 
@@ -377,6 +420,7 @@ def clean_insert_boxscore(soup,testhomeid,testawayid,testgameid):
                     insert_count +=1
                     insert_item.append(game)
                     insert_count +=1
+                    print(team)
                     insert_item.append(team)
                     insert_count +=1
                     
@@ -388,15 +432,18 @@ def clean_insert_boxscore(soup,testhomeid,testawayid,testgameid):
                         if(quarter != 0):
                             insert_item.append(quarter)
                             insert_count +=1
-                    if(overtime=='1'):
+                    if(overtime =='1'):
                         insert_item.append(overtime)
                         insert_count +=1
-                    if ((id.text).find("OT2") != -1):
+                    if (overtime =='2'):
                         insert_item.append(overtime)
                         insert_count +=1
-                    if(overtime=='3'):
+                    if (overtime =='3'):
                         insert_item.append(overtime)
                         insert_count +=1
+                    if (overtime =='4'):
+                        insert_item.append(overtime)
+                        insert_count +=1 
 
 
                     insert_item.append(home_away)
@@ -412,6 +459,9 @@ def clean_insert_boxscore(soup,testhomeid,testawayid,testgameid):
                     for cell in tds:
                         new_cell = cell.prettify
                         lazy_add += 1
+                        #if (cell.text) == (''):
+                            #print("we entered this loop")
+                            #insert_item.append(0.00)
                         if (cell.text == '\xa0'):
                             insert_item.append("Did Not Play")
                         else:
@@ -429,11 +479,11 @@ def clean_insert_boxscore(soup,testhomeid,testawayid,testgameid):
                         insert_item.append('null')
 
                     insert_questions =[]
-                    insert_questions.append("?")
+                    insert_questions.append("%s")
                     z =1
                     while len(insert_item) > z:
                         
-                        insert_questions.append("?")
+                        insert_questions.append("%s")
                         z +=1
                     lazy_add +=1    
                     lazyid = lazyid + str(lazy_add)
@@ -446,7 +496,9 @@ def clean_insert_boxscore(soup,testhomeid,testawayid,testgameid):
                             #print(insert_statement, str(insert_item)[1:-1]  +")")
                             insert_all= insert_statement + str(insert_item)[1:-1]  +")"
                             print(insert_all)
-                            curs.execute(insert_all)
+                            msqlcursor.execute(insert_all)
+                            mydb.commit()
+                            #curs.execute(insert_all)
                     
                             wr.writerow(insert_item)
                 
@@ -474,7 +526,7 @@ def clean_insert_boxscore(soup,testhomeid,testawayid,testgameid):
         ##for row ineach 
         
 ##print(soup)
-        conn.commit()
+        #conn.commit()
         count += 1
 
 
@@ -493,10 +545,16 @@ testgameid = 21901253
 
 def url_builder():
     base = "https://www.basketball-reference.com/boxscores/"
-    conn = sqlite3.connect("NbaStats.db")
-    curs = conn.cursor()
-   
-    curs.execute("SELECT team_id, game_id, Game_date, Matchup FROM games;")
+
+
+    mydb = mysql.connector.connect(
+    host="localhost",
+    user="robert",
+    password=""password_here""
+    )
+
+    curs = mydb.cursor()
+    curs.execute("SELECT team_id, game_id, Game_date, Matchup FROM nba_stats.games where game_id not in (select game_id from nba_stats.entire_boxscore) and game_id != 41600101 and game_id != 41600102;")
     #print(curs.fetchall())
     all_urls = []
     hometeamids = []
@@ -505,28 +563,28 @@ def url_builder():
     awayteams=[]
 
     for row in curs.fetchall():
+        
         #print(row[2])
+        #date_string = dt.strftime('%m/%d/%Y')
         date= row[2]
-        date= date.split(" ")
+        date = date.strftime("%Y-%m-%d")
         #print(date)
-        year=date[2]
+        date= date.split("-")
+        #print(date.text)
+        year=date[0]
         hometeamids.append(row[0]) 
         gameids.append(row[1])
-        #print(year)
-
-        lower_case=date[0].lower()
-        lower_case = lower_case.capitalize()
-        month = list(calendar.month_abbr).index(lower_case) 
-        #print(list(calendar.month_abbr))
-        month=str(month)
+    
+    
+        month=date[1]
 
         if (len(month) == 1):
             month = "0" + month
 
         #print(month) 
-        day= date[1]
+        day= date[2]
 
-        day=day.replace(",","")
+        #day=day.replace(",","")
 
         ##always needs to be the home team 
         ##Oct 31 Atl vs miami - Atlanta was the home team 
@@ -549,8 +607,9 @@ def url_builder():
         hometeams.append(home_team)
         awayteams.append(away_team)
         final_url= base + year +month + day + "0" + home_team + ".html"
-
+        #print(hometeams)
         all_urls.append(final_url)
+
 
     return(all_urls, gameids,hometeams,awayteams)
 
